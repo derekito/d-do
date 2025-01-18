@@ -5,7 +5,25 @@ import './TaskList.css';
 
 function TaskList() {
   const [tasks, setTasks] = useState([]);
+  const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [newTaskDate, setNewTaskDate] = useState('');
   const [sortBy, setSortBy] = useState('date');
+
+  const handleAddTask = (e) => {
+    e.preventDefault();
+    if (!newTaskTitle.trim()) return;
+
+    const newTask = {
+      id: Date.now().toString(),
+      title: newTaskTitle,
+      dueDate: newTaskDate,
+      completed: false
+    };
+
+    setTasks([...tasks, newTask]);
+    setNewTaskTitle('');
+    setNewTaskDate('');
+  };
 
   const handleDragEnd = (result) => {
     if (!result.destination) return;
@@ -37,6 +55,23 @@ function TaskList() {
 
   return (
     <div className="task-list">
+      <form onSubmit={handleAddTask} className="task-form">
+        <input
+          type="text"
+          value={newTaskTitle}
+          onChange={(e) => setNewTaskTitle(e.target.value)}
+          placeholder="Sample"
+          required
+        />
+        <input
+          type="date"
+          value={newTaskDate}
+          onChange={(e) => setNewTaskDate(e.target.value)}
+          required
+        />
+        <button type="submit" className="add-task-btn">Add Task</button>
+      </form>
+
       <div className="task-controls">
         <select 
           value={sortBy} 
