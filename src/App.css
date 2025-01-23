@@ -125,4 +125,82 @@ h2 {
   color: #333;
   margin: 0;
   font-style: italic;
+}
+
+.notes-section {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+}
+
+.notes-section h2 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 1.2em;
+  color: #333;
+}
+
+.notes-section textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  resize: vertical;
+  font-family: inherit;
+  background-color: white;
+  box-sizing: border-box;
+  margin: 0;
+}
+
+.notes-section textarea:focus {
+  outline: none;
+  border-color: #4CAF50;
+}
+
+.pomodoro-timer {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0 10px;
+  background: #f8f8f8;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+.timer-display {
+  font-family: monospace;
+  font-size: 1em;
+  color: #333;
+}
+
+.timer-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0 2px;
+  font-size: 1em;
+  filter: grayscale(100%);
+}
+
+.timer-btn:hover {
+  opacity: 0.8;
+}
+
+.timer-btn.break-btn {
+  filter: none;
+  color: #4CAF50;
+}
+
+.timer-btn[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  background: rgba(0,0,0,0.8);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8em;
+  margin-top: -25px;
+  white-space: nowrap;
 } 

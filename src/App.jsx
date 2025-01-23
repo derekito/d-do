@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import './App.css';
 import { NotificationPermission } from './components/NotificationPermission';
+import { PomodoroTimer } from './components/PomodoroTimer';
 
 const quotes = [
   "Small habits can have a surprising impact.",
@@ -22,6 +23,14 @@ function App() {
   const [dueDate, setDueDate] = useState('');
   const [dueTime, setDueTime] = useState('');
   const [sortBy, setSortBy] = useState('date');
+  const [notes, setNotes] = useState(() => {
+    try {
+      return localStorage.getItem('notes') || '';
+    } catch (error) {
+      console.log('Storage access error:', error);
+      return '';
+    }
+  });
 
   const quote = useMemo(() => {
     const randomIndex = Math.floor(Math.random() * quotes.length);
@@ -97,18 +106,57 @@ function App() {
   const onDragEnd = (result) => {
     if (!result.destination) return;
 
-    const items = Array.from(tasks);
+    const items = Array.from(activeTasks);
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
 
-    setTasks(items);
+    // Update the tasks array while preserving completed tasks
+    const newTasks = tasks.filter(task => task.completed).concat(items);
+    setTasks(newTasks);
   };
 
   const activeTasks = tasks.filter(task => !task.completed);
   const completedTasks = tasks.filter(task => task.completed);
 
-  // Add notification sound
-  const notificationSound = new Audio('/meow.mp3');
+  // Initialize audio only after component mounts
+  const [notificationSound] = useState(() => new Audio('/d-do/meow.mp3'));
+
+  // Update notification code to handle potential errors
+  const playNotification = async (task) => {
+    try {
+      await notificationSound.play();
+      
+      if (Notification.permission === "granted") {
+        new Notification("Task Reminder", {
+          body: `Time for task: ${task.title}`,
+          icon: "/d-do/favicon.ico"  // Updated favicon path
+        });
+      }
+    } catch (error) {
+      console.log('Notification error:', error);
+    }
+  };
+
+  // Update the checkTaskNotifications function
+  const checkTaskNotifications = () => {
+    const now = new Date();
+    tasks.forEach(task => {
+      if (task.dueTime && !task.completed) {
+        const taskDateTime = new Date(`${task.dueDate}T${task.dueTime}`);
+        
+        if (
+          now.getFullYear() === taskDateTime.getFullYear() &&
+          now.getMonth() === taskDateTime.getMonth() &&
+          now.getDate() === taskDateTime.getDate() &&
+          now.getHours() === taskDateTime.getHours() &&
+          now.getMinutes() === taskDateTime.getMinutes() &&
+          now.getSeconds() === 0
+        ) {
+          playNotification(task);
+        }
+      }
+    });
+  };
 
   // Check for tasks that need notifications
   useEffect(() => {
@@ -154,6 +202,15 @@ function App() {
     return () => clearInterval(interval);
   }, [tasks]);
 
+  // Save notes to localStorage when they change
+  useEffect(() => {
+    try {
+      localStorage.setItem('notes', notes);
+    } catch (error) {
+      console.log('Storage access error:', error);
+    }
+  }, [notes]);
+
   return (
     <div className="App">
       <NotificationPermission />
@@ -167,7 +224,7 @@ function App() {
           type="text"
           value={newTask}
           onChange={(e) => setNewTask(e.target.value)}
-          placeholder="Sample"
+          placeholder="What inspires you today?"
           required
         />
         <input
@@ -180,9 +237,8 @@ function App() {
           type="time"
           value={dueTime}
           onChange={(e) => setDueTime(e.target.value)}
-          placeholder="Optional time"
         />
-        <button type="submit" className="add-task-btn">Add Task</button>
+        <button type="submit">Add Task</button>
       </form>
 
       <div className="sort-control">
@@ -203,13 +259,13 @@ function App() {
             <Droppable droppableId="active-tasks">
               {(provided) => (
                 <div
-                  ref={provided.innerRef}
                   {...provided.droppableProps}
+                  ref={provided.innerRef}
                 >
-                  {sortTasks(activeTasks).map((task, index) => (
-                    <Draggable 
-                      key={task.id} 
-                      draggableId={task.id} 
+                  {activeTasks.map((task, index) => (
+                    <Draggable
+                      key={task.id}
+                      draggableId={task.id.toString()}
                       index={index}
                     >
                       {(provided) => (
@@ -228,6 +284,7 @@ function App() {
                             <span className="task-time">{formatTime(task.dueTime)}</span>
                           )}
                           <span className="task-title">{task.title}</span>
+                          <PomodoroTimer />
                           <span className="task-date">{formatDate(task.dueDate)}</span>
                           <button 
                             onClick={() => deleteTask(task.id)}
@@ -292,6 +349,17 @@ function App() {
               </Droppable>
             </div>
           )}
+
+          {/* Add Notes Section */}
+          <div className="notes-section">
+            <h2>Notes</h2>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Type your notes here..."
+              rows="4"
+            />
+          </div>
         </div>
       </DragDropContext>
     </div>
